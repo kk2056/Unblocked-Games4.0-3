@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Gamepad2, Search, ArrowLeft, Shield, Flame, Zap, Menu, X, Mail, AlertTriangle, RotateCcw, Play, Check, Cookie, Info } from 'lucide-react';
+import { Gamepad2, Search, ArrowLeft, Shield, Flame, Zap, Menu, X, Mail, AlertTriangle, RotateCcw, Play, Check, Cookie, Info, Maximize } from 'lucide-react';
 
 // --- TYPES ---
 interface Game {
@@ -211,7 +211,7 @@ const GAMES: Game[] = [
 
 // --- AD COMPONENTS ---
 
-const AdBanner: React.FC = () => {
+const AdBanner: React.FC<{ slotId?: string }> = ({ slotId = "1234567890" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const pushed = useRef(false);
   const location = useLocation();
@@ -222,12 +222,9 @@ const AdBanner: React.FC = () => {
 
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && !pushed.current) {
-        // Wait for layout to settle
         requestAnimationFrame(() => {
           if (!containerRef.current) return;
-          
           const width = containerRef.current.offsetWidth;
-          // Only push if width is actually determined
           if (width > 0 && containerRef.current.offsetParent !== null) {
             timer = setTimeout(() => {
               try {
@@ -251,17 +248,17 @@ const AdBanner: React.FC = () => {
       observer.disconnect();
       if (timer) clearTimeout(timer);
     };
-  }, [location.pathname]);
+  }, [location.pathname, slotId]);
 
   return (
-    <div className="w-full bg-[#1f2937] border-y border-gray-800 my-8 py-6 flex flex-col items-center justify-center min-h-[120px]">
+    <div className="w-full bg-[#1f2937] border-y border-gray-800 my-4 py-6 flex flex-col items-center justify-center min-h-[120px]">
       <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-semibold">Advertisement</div>
       <div ref={containerRef} className="overflow-hidden bg-gray-800 rounded w-full max-w-[728px] h-[90px] flex items-center justify-center relative shadow-sm min-w-[1px]">
         <ins className="adsbygoogle"
-             key={`banner-slot-${location.pathname}`}
+             key={`banner-slot-${location.pathname}-${slotId}`}
              style={{ display: 'inline-block', width: '728px', height: '90px' }}
              data-ad-client="ca-pub-9774042341049510"
-             data-ad-slot="1234567890">
+             data-ad-slot={slotId}>
         </ins>
         <span className="absolute text-gray-700 text-xs pointer-events-none z-0">Ad Space</span>
       </div>
@@ -518,7 +515,7 @@ const Home: React.FC<{ searchTerm: string }> = ({ searchTerm }) => {
           <div className="col-span-full py-20 text-center text-gray-500">No games found</div>
         )}
       </div>
-      <AdBanner />
+      <AdBanner slotId="8888888888" />
       <div className="mt-12 bg-[#1f2937] rounded-2xl p-6 md:p-10 border border-gray-700">
         <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-600 pb-4">Play Unblocked Games No Download in 2025</h2>
         <div className="grid md:grid-cols-2 gap-8 text-gray-300 leading-relaxed text-sm">
@@ -549,16 +546,58 @@ const GamePlayer: React.FC = () => {
     setHasError(false);
   }, [id]);
 
+  // Fullscreen support logic
+  const toggleFullscreen = () => {
+    const elem = document.documentElement;
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen().catch(err => {
+        console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'f') {
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (!game) return null;
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <button onClick={() => navigate('/')} className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg text-sm text-gray-300 mb-4">
+      <AdSenseScript />
+      <button onClick={() => navigate('/')} className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg text-sm text-gray-300 mb-4 transition-colors hover:bg-gray-700">
         <ArrowLeft className="w-4 h-4" /> Back to Library
       </button>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 space-y-8">
-          <div className="relative bg-black rounded-xl overflow-hidden aspect-[16/9] ring-1 ring-gray-800">
+        <div className="lg:col-span-3 space-y-4">
+          
+          {/* Ad Slot Above Game */}
+          <AdBanner slotId="top-game-slot" />
+
+          {/* Fullscreen Controls */}
+          <div className="flex flex-col items-center">
+            <button 
+              onClick={toggleFullscreen} 
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-lg mb-4 flex items-center gap-2 transition-all shadow-lg active:scale-95"
+            >
+              <Maximize className="w-5 h-5" />
+              Go Full Screen (Press F)
+            </button>
+            <div className="text-center text-white bg-blue-800/80 backdrop-blur-sm p-2.5 rounded-lg mb-4 text-sm font-medium border border-blue-600 shadow-md">
+              Press F for the best fullscreen experience on Chromebook!
+            </div>
+          </div>
+
+          <div className="relative bg-black rounded-xl overflow-hidden aspect-[16/9] ring-1 ring-gray-800 shadow-2xl">
             {isLoading && !hasError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10">
                 <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
@@ -574,7 +613,11 @@ const GamePlayer: React.FC = () => {
               onError={() => setHasError(true)}
             />
           </div>
-          <div className="bg-[#1f2937] rounded-xl p-6 border border-gray-700">
+
+          {/* Ad Slot Below Game */}
+          <AdBanner slotId="bottom-game-slot" />
+
+          <div className="bg-[#1f2937] rounded-xl p-6 border border-gray-700 shadow-lg">
             <h1 className="text-3xl font-bold text-white mb-6">{game.title}</h1>
             <div className="prose prose-invert max-w-none text-gray-300">
               <section className="mb-8">
@@ -627,19 +670,17 @@ const GamePlayer: React.FC = () => {
               <li className="mb-2"><a href="https://subway2025.online" className="text-blue-400 hover:text-blue-300 transition-colors duration-200">Play Subway Surfers World Unblocked 2025</a></li>
             </ul>
           </div>
-
-          <AdBanner />
         </div>
         <div className="lg:col-span-1 space-y-8">
           <AdRectangle />
-          <div className="bg-[#1f2937] rounded-xl p-5 border border-gray-700 sticky top-24">
+          <div className="bg-[#1f2937] rounded-xl p-5 border border-gray-700 sticky top-24 shadow-lg">
             <h3 className="font-bold text-white mb-4 uppercase tracking-wide border-b border-gray-600 pb-2">Related Games</h3>
             <div className="space-y-4">
-              {GAMES.filter(g => g.id !== game.id).slice(0, 4).map(sg => (
-                <Link key={sg.id} to={`/game/${sg.id}`} className="flex gap-3 hover:bg-gray-800 p-2 rounded-lg transition-colors">
-                  <img src={sg.image} alt="" className="w-20 h-14 object-cover rounded shrink-0" />
+              {GAMES.filter(g => g.id !== game.id).slice(0, 5).map(sg => (
+                <Link key={sg.id} to={`/game/${sg.id}`} className="flex gap-3 hover:bg-gray-800 p-2 rounded-lg transition-colors group">
+                  <img src={sg.image} alt="" className="w-20 h-14 object-cover rounded shrink-0 group-hover:scale-105 transition-transform" />
                   <div className="flex flex-col justify-center">
-                    <h4 className="text-white text-sm font-medium line-clamp-1">{sg.title}</h4>
+                    <h4 className="text-white text-sm font-medium line-clamp-1 group-hover:text-indigo-400">{sg.title}</h4>
                     <p className="text-xs text-gray-500">{sg.rating} rating</p>
                   </div>
                 </Link>
@@ -654,7 +695,7 @@ const GamePlayer: React.FC = () => {
 
 const StaticPage: React.FC<{ type: 'about' | 'privacy' | 'contact' }> = ({ type }) => (
   <div className="container mx-auto px-4 py-12 max-w-3xl">
-    <div className="bg-[#1f2937] rounded-2xl p-8 border border-gray-700">
+    <div className="bg-[#1f2937] rounded-2xl p-8 border border-gray-700 shadow-xl">
       <h1 className="text-3xl font-bold text-white mb-8 capitalize">{type}</h1>
       <div className="text-gray-300 leading-relaxed">
         {type === 'about' ? <p>Welcome to Unblocked Games 2025. We provide the best browser games safe for school.</p> : <p>Privacy Policy and Terms for nodownload2025.online.</p>}
@@ -668,7 +709,7 @@ const App: React.FC = () => {
   const location = useLocation();
   
   return (
-    <div className="min-h-screen flex flex-col bg-[#030712] text-white">
+    <div className="min-h-screen flex flex-col bg-[#030712] text-white selection:bg-indigo-500/30">
       <AdSenseScript />
       <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       <main className="flex-grow">
