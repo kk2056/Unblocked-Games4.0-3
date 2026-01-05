@@ -1,22 +1,26 @@
-
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-// Removed conflicting 'Home' import from lucide-react to resolve clash with local 'Home' component.
-// Removed unused 'Info' import.
-import { Gamepad2, Search, ArrowLeft, Shield, Flame, Star, Zap } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Gamepad2, Search, ArrowLeft, Flame, Zap, Play, Check, Cookie, Maximize, Monitor, Smartphone, Globe } from 'lucide-react';
 
 // --- TYPES ---
 interface Game {
   id: string;
   title: string;
-  category: string;
+  category: 'Action' | 'Racing' | 'Puzzle' | 'Sports' | 'Simulation' | 'Adventure' | 'Arcade' | 'Rhythm' | 'Platformer' | 'Classic';
   image: string;
   url: string;
   description: string;
+  richContent?: {
+    gameplay: string;
+    strategies: string;
+    whyPopular: string;
+  };
+  rating: number;
+  plays: string;
 }
 
 declare global {
-  interface window {
+  interface Window {
     adsbygoogle: any[];
   }
 }
@@ -24,208 +28,347 @@ declare global {
 // --- DATA ---
 const GAMES: Game[] = [
   {
-    id: '1',
-    title: 'Paper Minecraft',
-    category: 'Simulation',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/10128431_480x360.png',
-    url: 'https://scratch.mit.edu/projects/10128431/embed',
-    description: 'A 2D version of the legendary sandbox game. Mine, build, and survive.'
-  },
-  {
-    id: '2',
-    title: 'Geometry Dash v1.5',
-    category: 'Rhythm',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/105500895_480x360.png',
-    url: 'https://scratch.mit.edu/projects/105500895/embed',
-    description: 'Jump and fly your way through danger in this rhythm-based action platformer.'
-  },
-  {
-    id: '3',
-    title: 'Appel',
-    category: 'Platformer',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/60917032_480x360.png',
-    url: 'https://scratch.mit.edu/projects/60917032/embed',
-    description: 'Navigate through complex levels in this fast-paced apple platformer.'
-  },
-  {
-    id: '4',
-    title: 'Pac-Man',
-    category: 'Classic',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/16388708_480x360.png',
-    url: 'https://scratch.mit.edu/projects/16388708/embed',
-    description: 'Eat the dots and avoid the ghosts in this faithful recreation.'
-  },
-  {
-    id: '5',
-    title: 'Flappy Bird',
-    category: 'Arcade',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/16807661_480x360.png',
-    url: 'https://scratch.mit.edu/projects/16807661/embed',
-    description: 'Tap to fly and dodge the pipes. How high can you score?'
-  },
-  {
-    id: '6',
-    title: 'Super Mario Bros',
-    category: 'Platformer',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/322253723_480x360.png',
-    url: 'https://scratch.mit.edu/projects/322253723/embed',
-    description: 'The classic platformer experience right in your browser.'
-  },
-  {
-    id: '7',
-    title: 'Tetris',
-    category: 'Puzzle',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/403816768_480x360.png',
-    url: 'https://scratch.mit.edu/projects/403816768/embed',
-    description: 'Stack the blocks and clear lines in the world\'s most famous puzzle game.'
-  },
-  {
-    id: '8',
-    title: 'Ninja',
+    id: 'subway-surfers',
+    title: 'Subway Surfers',
     category: 'Action',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/14299496_480x360.png',
-    url: 'https://scratch.mit.edu/projects/14299496/embed',
-    description: 'Master the art of the ninja in this stealth action game.'
+    image: 'https://images.crazygames.com/games/subway-surfers-new-york/cover-16x9.png?auto=format,compress&q=75&cs=strip',
+    url: 'https://www.crazygames.com/embed/subway-surfers-new-york',
+    description: 'Dash as fast as you can through the subway and dodge the oncoming trains.',
+    rating: 4.9,
+    plays: '52.1M',
+    richContent: {
+      gameplay: "Subway Surfers remains the gold standard for endless runners. You play as a graffiti artist running along subway tracks to escape a grumpy inspector and his dog. The game requires sharp reflexes to dodge trains and hurdles while collecting coins for power-ups.",
+      strategies: "Focus on staying on the roof of the trains as much as possible to avoid ground-level obstacles. Prioritize the Jetpack and the 2x Multiplier to skyrocket your high score.",
+      whyPopular: "Its vibrant graphics and smooth controls make it perfectly compatible with school Chromebooks and mobile devices."
+    }
   },
   {
-    id: '9',
-    title: 'Basketball Physics',
-    category: 'Sports',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/138987627_480x360.png',
-    url: 'https://scratch.mit.edu/projects/138987627/embed',
-    description: 'Wacky physics-based basketball fun for one or two players.'
+    id: 'geometry-dash',
+    title: 'Geometry Dash',
+    category: 'Rhythm',
+    image: 'https://images.crazygames.com/games/geometry-dash/cover-16x9.png?auto=format,compress&q=75&cs=strip',
+    url: 'https://www.crazygames.com/embed/geometry-dash',
+    description: 'Jump and fly your way through danger in this rhythm-based action platformer.',
+    rating: 4.8,
+    plays: '12.5M',
+    richContent: {
+      gameplay: "A rhythm-based platformer that challenges your timing and patience. Every jump is synced to a high-energy soundtrack, making the difficulty feel rewarding rather than frustrating.",
+      strategies: "Turn on the music! The audio cues are essential for timing your jumps in later levels. Use 'Practice Mode' to master tricky segments before attempting a full run.",
+      whyPopular: "The challenge level creates a 'just one more try' loop that is perfect for short breaks."
+    }
   },
   {
-    id: '10',
-    title: 'Terraria',
-    category: 'Adventure',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/322340626_480x360.png',
-    url: 'https://scratch.mit.edu/projects/322340626/embed',
-    description: 'Dig, fight, explore, build: The very world is at your fingertips.'
+    id: 'moto-x3m',
+    title: 'Moto X3M',
+    category: 'Racing',
+    image: 'https://images.crazygames.com/games/moto-x3m/cover-16x9.png?auto=format,compress&q=75&cs=strip',
+    url: 'https://www.crazygames.com/embed/moto-x3m',
+    description: 'A time-trial bike racing game with challenging obstacles and stunts.',
+    rating: 4.7,
+    plays: '85.4M',
+    richContent: {
+      gameplay: "Moto X3M is a physics-based bike racing game featuring 22 challenging levels. Each level is packed with massive obstacles like giant saw blades and explosive TNT crates.",
+      strategies: "Balance is key. Leaning back while in the air helps you land safely on uneven surfaces, while front flips and backflips reduce your overall time.",
+      whyPopular: "Fast loading times and high replayability make it a favorite for 'no download' gaming sessions."
+    }
   },
   {
-    id: '11',
+    id: 'slope',
     title: 'Slope',
-    category: 'Arcade',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/27599025_480x360.png',
-    url: 'https://scratch.mit.edu/projects/27599025/embed',
-    description: 'Roll down the slope as fast as possible without falling off.'
+    category: 'Action',
+    image: 'https://images.crazygames.com/games/slope/cover-16x9.png?auto=format,compress&q=75&cs=strip',
+    url: 'https://www.crazygames.com/embed/slope',
+    description: 'Drive a ball in the 3D running game in slope city. Easy to start, hard to master.',
+    rating: 4.4,
+    plays: '105M',
+    richContent: {
+      gameplay: "Control a neon ball as it speeds down a steep, obstacle-filled 3D track. The further you go, the faster the ball travels, testing your reaction time to the limit.",
+      strategies: "Try to stay centered on the track, as the physics can become unpredictable at high speeds. Watch for the red obstacles that end your run immediately.",
+      whyPopular: "Its simple 3D aesthetic and high-speed gameplay make it one of the most played unblocked games globally."
+    }
   },
   {
-    id: '12',
-    title: 'Crossy Road',
-    category: 'Arcade',
-    image: 'https://uploads.scratch.mit.edu/get_image/project/51765161_480x360.png',
-    url: 'https://scratch.mit.edu/projects/51765161/embed',
-    description: 'Why did the chicken cross the road? Find out in this endless hopper.'
+    id: 'basket-random',
+    title: 'Basket Random',
+    category: 'Sports',
+    image: 'https://images.crazygames.com/games/basket-random/cover-16x9.png?auto=format,compress&q=75&cs=strip',
+    url: 'https://www.crazygames.com/embed/basket-random',
+    description: 'Score a basket using only one key with variations from different fields and players.',
+    rating: 4.5,
+    plays: '15.8M',
+    richContent: {
+      gameplay: "A wacky one-button basketball game where the physics change every time you score. You might find yourself playing with long arms, on an icy court, or with a heavy ball.",
+      strategies: "Timing your jump is more important than spamming the button. Wait for the opponent to jump first so you can block or steal the ball while they are descending.",
+      whyPopular: "The unpredictability makes it a hilarious local multiplayer or solo experience."
+    }
   }
 ];
 
+// --- AD COMPONENT ---
+
+const AdBanner: React.FC<{ slotId?: string; className?: string }> = ({ slotId = "default-slot", className = "" }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pushed = useRef(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    pushed.current = false;
+    let timer: any;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !pushed.current) {
+        requestAnimationFrame(() => {
+          if (!containerRef.current) return;
+          const width = containerRef.current.offsetWidth;
+          if (width > 0) {
+            timer = setTimeout(() => {
+              try {
+                if (window.adsbygoogle && !pushed.current) {
+                  (window.adsbygoogle = window.adsbygoogle || []).push({});
+                  pushed.current = true;
+                  observer.disconnect();
+                }
+              } catch (e) {
+                console.warn("AdSense push deferred.");
+              }
+            }, 500);
+          }
+        });
+      }
+    }, { threshold: 0.1 });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => {
+      observer.disconnect();
+      if (timer) clearTimeout(timer);
+    };
+  }, [location.pathname, slotId]);
+
+  return (
+    <div className={`flex justify-center w-full ${className}`}>
+      <div ref={containerRef} className="bg-gray-900/40 rounded-lg flex flex-col items-center justify-center min-h-[100px] min-w-[300px] w-full border border-gray-800/50 relative overflow-hidden">
+        <div className="absolute top-1 text-[8px] text-gray-700 uppercase tracking-widest pointer-events-none">Advertisement</div>
+        <ins className="adsbygoogle"
+             key={`ad-${location.pathname}-${slotId}`}
+             style={{ display: 'block', width: '100%', minHeight: '90px' }}
+             data-ad-client="ca-pub-9774042341049510"
+             data-ad-slot={slotId}
+             data-ad-format="auto"
+             data-full-width-responsive="true">
+        </ins>
+      </div>
+    </div>
+  );
+};
+
 // --- COMPONENTS ---
 
-const AdBanner: React.FC = () => {
-  useEffect(() => {
-    try {
-      // Check if script already exists to prevent duplicates
-      if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
-        const script = document.createElement("script");
-        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9774042341049510";
-        script.async = true;
-        script.crossOrigin = "anonymous";
-        document.head.appendChild(script);
-      }
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-      console.error("AdSense error:", e);
-    }
-  }, []);
-
-  return (
-    <div className="w-full h-24 bg-gray-800 my-6 flex items-center justify-center border border-gray-700 rounded overflow-hidden">
-      <ins className="adsbygoogle"
-           style={{ display: 'block', width: '100%', height: '100%' }}
-           data-ad-client="ca-pub-9774042341049510"
-           data-ad-slot="auto-generated-slot-id" 
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <span className="absolute text-xs text-gray-500 pointer-events-none">Advertisement</span>
+const Header: React.FC<{ searchTerm: string; setSearchTerm: (s: string) => void }> = ({ searchTerm, setSearchTerm }) => (
+  <header className="bg-gray-950 border-b border-gray-800 sticky top-0 z-50 py-3 backdrop-blur-md shadow-xl">
+    <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <Link to="/" className="flex items-center gap-2 group">
+        <div className="bg-indigo-600 p-2 rounded-xl group-hover:rotate-12 transition-transform shadow-indigo-500/20 shadow-lg">
+          <Gamepad2 className="text-white w-6 h-6" />
+        </div>
+        <div className="leading-tight">
+          <h1 className="text-xl font-black text-white tracking-tighter uppercase italic">Unblocked 2025</h1>
+          <p className="text-[9px] text-indigo-400 font-black uppercase tracking-[0.2em]">No Download Portal</p>
+        </div>
+      </Link>
+      <div className="relative w-full md:max-w-md">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <input 
+          type="text" 
+          placeholder="Search 1,000+ unblocked games..." 
+          className="w-full bg-gray-900 border border-gray-700 rounded-full py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white placeholder:text-gray-600"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
     </div>
-  );
-};
+  </header>
+);
 
-const Header: React.FC<{ searchTerm: string; setSearchTerm: (s: string) => void }> = ({ searchTerm, setSearchTerm }) => {
+const GamePlayer: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const game = GAMES.find(g => g.id === id);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'f') toggleFullscreen();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [id]);
+
+  const toggleFullscreen = () => {
+    const elem = document.documentElement;
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen().catch(err => console.warn(err));
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  };
+
+  if (!game) return null;
+
   return (
-    <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="bg-indigo-600 p-2 rounded-lg group-hover:bg-indigo-500 transition-colors">
-            <Gamepad2 className="text-white w-6 h-6" />
+    <div className="container mx-auto px-4 py-6">
+      <button onClick={() => navigate('/')} className="flex items-center gap-2 px-5 py-2.5 bg-gray-800 rounded-xl text-xs font-black text-gray-300 mb-6 hover:bg-gray-700 transition-all border border-gray-700 uppercase tracking-widest">
+        <ArrowLeft className="w-4 h-4" /> Library
+      </button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-3">
+          
+          {/* AD ABOVE GAME */}
+          <AdBanner slotId="game-player-top" className="mb-6" />
+
+          {/* MOBILE TIP */}
+          <div className="text-center text-white bg-indigo-900/80 p-4 rounded-2xl mb-6 max-w-lg mx-auto shadow-2xl border border-indigo-500/30 flex items-center justify-center gap-3">
+            <Smartphone className="w-5 h-5 text-indigo-400" />
+            <p className="text-sm font-bold tracking-tight">
+              Landscape Mode is highly recommended for mobile & Chromebook play!
+            </p>
           </div>
-          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-            Unblocked Games 2025
-          </span>
-        </Link>
-        
-        <div className="relative w-full md:w-96">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="w-5 h-5 text-gray-400" />
+
+          {/* FULLSCREEN BUTTON */}
+          <button 
+            onClick={toggleFullscreen} 
+            className="block mx-auto bg-green-600 hover:bg-green-700 text-white font-black py-4 px-10 rounded-2xl text-xl mb-6 shadow-2xl transition-all active:scale-95 transform hover:scale-105 flex items-center justify-center gap-4 uppercase tracking-tighter"
+          >
+            <Maximize className="w-6 h-6" />
+            Full Screen (F Key)
+          </button>
+          
+          <div className="text-center text-white bg-blue-900/50 p-4 rounded-2xl mb-8 max-w-xl mx-auto shadow-lg border border-blue-500/20 text-sm font-bold italic">
+            "Zero Lag" Experience - Press F for total immersion!
           </div>
-          <input 
-            type="text"
-            placeholder="Search 12,000+ games..."
-            className="w-full bg-gray-800 text-white border border-gray-700 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-gray-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+
+          {/* LOADING HINT */}
+          <div className="text-center text-gray-600 mb-4 animate-pulse text-[10px] font-black uppercase tracking-[0.4em]">
+            Syncing Assets...
+          </div>
+
+          {/* IFRAME CONTAINER */}
+          <div className="relative bg-black rounded-[2rem] overflow-hidden aspect-[16/9] ring-8 ring-gray-950 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.8)]">
+            {isLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-10">
+                <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-6"></div>
+                <p className="text-indigo-400 text-xs font-black tracking-[0.3em] uppercase">Booting Engine...</p>
+              </div>
+            )}
+            <iframe
+              src={game.url}
+              title={game.title}
+              className="w-full h-full border-0"
+              allowFullScreen
+              allow="autoplay; gamepad; gyroscope; accelerometer"
+              onLoad={() => setIsLoading(false)}
+            />
+          </div>
+
+          {/* AD BELOW GAME */}
+          <AdBanner slotId="game-player-bottom" className="mt-10" />
+
+          {/* RICH CONTENT SECTION (Solving Low Value Content) */}
+          <div className="bg-gray-900 rounded-[2.5rem] p-10 border border-gray-800 shadow-2xl mt-12">
+            <h1 className="text-4xl font-black text-white mb-6 border-b border-gray-800 pb-6 tracking-tighter uppercase italic">
+              {game.title} <span className="text-indigo-500">Unblocked 2025/2026</span>
+            </h1>
+            <div className="prose prose-invert max-w-none text-gray-400">
+              <h2 className="text-xl text-white font-black mb-4 uppercase flex items-center gap-2">
+                <Globe className="w-5 h-5 text-indigo-400" /> Why Play {game.title}?
+              </h2>
+              <p className="mb-8 leading-relaxed text-lg font-medium italic opacity-90">
+                As we look towards the next generation of browser gaming, including the highly anticipated <strong>unblocked games 2026 school</strong> trends, {game.title} stands out as a timeless classic. It offers a perfect blend of high-speed performance and low-latency input, ensuring it works perfectly on restricted school networks and older hardware.
+              </p>
+              
+              <div className="grid md:grid-cols-2 gap-8 mb-10">
+                <div className="bg-gray-850/40 p-8 rounded-3xl border border-gray-700/30">
+                  <h3 className="text-indigo-400 font-black mb-4 flex items-center gap-2 uppercase tracking-widest text-xs">
+                    <Flame className="w-5 h-5" /> Master the Mechanics
+                  </h3>
+                  <p className="text-sm leading-relaxed">{game.richContent?.gameplay}</p>
+                </div>
+                <div className="bg-gray-850/40 p-8 rounded-3xl border border-gray-700/30">
+                  <h3 className="text-indigo-400 font-black mb-4 flex items-center gap-2 uppercase tracking-widest text-xs">
+                    <Check className="w-5 h-5" /> Professional Tips
+                  </h3>
+                  <p className="text-sm leading-relaxed">{game.richContent?.strategies}</p>
+                </div>
+              </div>
+
+              <div className="bg-gray-950/50 p-8 rounded-3xl border border-gray-800 mb-8">
+                <h3 className="text-white font-black mb-4 uppercase text-sm italic">The 2026 Perspective</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  The evolution of web technologies like WebGL and WebAssembly means that playing <strong>unblocked games in 2026 at school</strong> will be more immersive than ever. We are committed to maintaining a high-quality library that bypasses filters while providing educational and hand-eye coordination benefits. Whether you are on a Chromebook or a tablet, our games are optimized for instant execution without any downloads.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* SEO LINKS GRID */}
+          <div className="mt-12 p-10 bg-gray-950 rounded-[3rem] border border-gray-800 border-dashed">
+            <h3 className="text-white font-black mb-8 text-center uppercase tracking-[0.4em] text-[10px] opacity-40">Network Global Links</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[9px] font-black uppercase tracking-tighter">
+              <a href="https://snakegame.cfd" target="_blank" className="text-gray-500 hover:text-indigo-400 transition-all bg-gray-900/30 p-4 rounded-2xl text-center border border-gray-800">Snake Unblocked</a>
+              <a href="https://slope2025.online" target="_blank" className="text-gray-500 hover:text-indigo-400 transition-all bg-gray-900/30 p-4 rounded-2xl text-center border border-gray-800">Slope Game 2025</a>
+              <a href="https://retrobowl2025.online" target="_blank" className="text-gray-500 hover:text-indigo-400 transition-all bg-gray-900/30 p-4 rounded-2xl text-center border border-gray-800">Retro Bowl Online</a>
+              <a href="https://1v1lol2025.online" target="_blank" className="text-gray-500 hover:text-indigo-400 transition-all bg-gray-900/30 p-4 rounded-2xl text-center border border-gray-800">1v1.LOL Mobile</a>
+            </div>
+          </div>
+        </div>
+
+        {/* SIDEBAR */}
+        <div className="lg:col-span-1 space-y-8">
+          <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-white font-black mb-6 flex items-center gap-2 border-b border-gray-800 pb-4 text-[11px] uppercase tracking-[0.3em]">
+              <Zap className="w-4 h-4 text-yellow-500" /> Suggested
+            </h3>
+            <div className="space-y-6">
+              {GAMES.filter(g => g.id !== id).map(sg => (
+                <Link key={sg.id} to={`/game/${sg.id}`} className="flex gap-4 group">
+                  <div className="w-20 h-14 overflow-hidden rounded-2xl shrink-0 border border-gray-800 group-hover:border-indigo-500 transition-all shadow-md">
+                    <img src={sg.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <h4 className="text-white text-[11px] font-black line-clamp-1 group-hover:text-indigo-400 transition-colors uppercase italic">{sg.title}</h4>
+                    <p className="text-[9px] text-gray-500 uppercase font-black tracking-tighter mt-1">{sg.category}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <AdBanner slotId="sidebar-ad-1" />
         </div>
       </div>
-    </header>
+    </div>
   );
 };
-
-const Footer: React.FC = () => (
-  <footer className="bg-gray-950 border-t border-gray-800 py-8 mt-12">
-    <div className="container mx-auto px-4 text-center">
-      <div className="flex justify-center gap-6 mb-4">
-        <Link to="/about" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm">About Us</Link>
-        <Link to="/privacy" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm">Privacy Policy</Link>
-        <Link to="/" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm">Request Game</Link>
-      </div>
-      <p className="text-gray-600 text-xs">
-        © 2025 Unblocked Games No Download. All rights reserved. 
-        <br/>
-        "Unblocked Games 2025" is a registered trademark.
-      </p>
-    </div>
-  </footer>
-);
 
 const GameCard: React.FC<{ game: Game }> = ({ game }) => (
   <Link to={`/game/${game.id}`} className="block group">
-    <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-indigo-500 transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:-translate-y-1 h-full flex flex-col">
+    <div className="bg-gray-900 rounded-[2rem] overflow-hidden border border-gray-800 hover:border-indigo-500 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)]">
       <div className="relative aspect-video overflow-hidden">
-        <img 
-          src={game.image} 
-          alt={game.title} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-white border border-white/10">
-          {game.category}
-        </div>
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="bg-indigo-600 rounded-full p-3 transform scale-0 group-hover:scale-100 transition-transform duration-300">
-            <Zap className="w-6 h-6 text-white fill-current" />
+        <img src={game.image} alt={game.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-indigo-600 rounded-full p-6 transform scale-50 group-hover:scale-100 transition-all duration-300 shadow-indigo-500/50 shadow-2xl">
+            <Play className="text-white w-8 h-8 fill-current" />
           </div>
         </div>
       </div>
-      <div className="p-4 flex-1 flex flex-col">
-        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors truncate">{game.title}</h3>
-        <p className="text-gray-400 text-sm line-clamp-2 mb-3 flex-1">{game.description}</p>
-        <div className="flex items-center text-xs text-gray-500 gap-1 mt-auto">
-          <Star className="w-3 h-3 text-yellow-500 fill-current" />
-          <span>4.9/5</span>
-          <span className="mx-1">•</span>
-          <span>1.2M Plays</span>
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-white font-black text-sm group-hover:text-indigo-400 transition-colors uppercase tracking-tighter italic">{game.title}</h3>
+          <span className="bg-indigo-600/20 text-indigo-400 text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest">{game.category}</span>
+        </div>
+        <div className="flex items-center gap-3 text-[10px] text-gray-600 font-black uppercase">
+          <span className="flex items-center gap-1 text-yellow-600"><Flame className="w-3 h-3" /> {game.rating}</span>
+          <span className="opacity-50">{game.plays} Plays</span>
         </div>
       </div>
     </div>
@@ -233,210 +376,108 @@ const GameCard: React.FC<{ game: Game }> = ({ game }) => (
 );
 
 const Home: React.FC<{ searchTerm: string }> = ({ searchTerm }) => {
-  const filteredGames = GAMES.filter(g => 
-    g.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    g.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredGames = GAMES.filter(g => g.title.toLowerCase().includes(searchTerm.toLowerCase()));
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      {!searchTerm && (
-        <div className="mb-10 text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 tracking-tight">
-            Play Unblocked Games Instantly
-          </h1>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            No downloads. No restrictions. Just pure browser gaming bliss optimized for 2025.
+      <div className="mb-20 text-center">
+        <h2 className="text-6xl md:text-9xl font-black text-white mb-6 tracking-tighter uppercase italic leading-none">
+          UNBLOCKED <span className="text-indigo-500">2025</span>
+        </h2>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-gray-500 font-bold uppercase tracking-widest text-[11px] mb-8">
+          <span className="flex items-center gap-2 px-4 py-2 bg-gray-900 rounded-full border border-gray-800"><Monitor className="w-4 h-4" /> PC Optimized</span>
+          <span className="flex items-center gap-2 px-4 py-2 bg-gray-900 rounded-full border border-gray-800"><Smartphone className="w-4 h-4" /> No Installation</span>
+          <span className="flex items-center gap-2 px-4 py-2 bg-gray-900 rounded-full border border-gray-800"><Globe className="w-4 h-4" /> Global Access</span>
+        </div>
+        <p className="text-gray-500 max-w-3xl mx-auto text-base font-bold tracking-tight opacity-70 leading-relaxed">
+          The ultimate destination for instant-access browser gaming. Experience zero-lag performance on Chromebooks, tablets, and desktops. No downloads required.
+        </p>
+      </div>
+      
+      <AdBanner slotId="home-top" className="mb-12" />
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+        {filteredGames.map(game => <GameCard key={game.id} game={game} />)}
+      </div>
+
+      <div className="mt-32 p-12 bg-gray-900/50 rounded-[3.5rem] border border-gray-800 shadow-3xl text-center max-w-5xl mx-auto">
+        <h3 className="text-3xl font-black text-white mb-8 uppercase italic">Trending: Unblocked Games 2026 School Access</h3>
+        <div className="prose prose-invert prose-indigo mx-auto text-gray-500 font-medium leading-loose text-sm text-justify md:text-center space-y-6">
+          <p>
+            Welcome to the future of browser entertainment. Our platform is meticulously designed to provide high-quality <strong>unblocked games for 2026 school</strong> environments. We understand the need for quick, accessible, and safe gaming during school breaks or downtime. By leveraging advanced HTML5 frameworks, our library of <strong>unblocked games 2026 school</strong> edition ensures that you get a console-like experience without the need for high-end hardware.
           </p>
-          <div className="flex justify-center gap-4 pt-2">
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 rounded-full border border-gray-700/50 text-sm text-gray-300">
-              <Flame className="w-4 h-4 text-orange-500" /> Trending
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 rounded-full border border-gray-700/50 text-sm text-gray-300">
-              <Zap className="w-4 h-4 text-yellow-400" /> New
-            </div>
-          </div>
+          <p>
+            Why choose our portal? Unlike other legacy sites, we focus on the "No Download" philosophy. This means zero risk of malware and instant playability. Our recommendations for <strong>unblocked games 2026 school</strong> students include fast-paced titles like Subway Surfers and Slope, alongside strategic masterpieces like Basketball Physics and Geometry Dash. These games are not just fun—they help improve cognitive functions, hand-eye coordination, and strategic thinking.
+          </p>
+          <p>
+            As we move closer to 2026, we are updating our servers to provide even lower latency for global users. Our mission is to keep gaming alive in restricted networks while ensuring all content is safe and educational. Bookmark <strong>nodownload2025.online</strong> to stay ahead of the curve and access the premier collection of unblocked content anytime, anywhere.
+          </p>
         </div>
-      )}
-
-      <AdBanner />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredGames.length > 0 ? (
-          filteredGames.map(game => <GameCard key={game.id} game={game} />)
-        ) : (
-          <div className="col-span-full text-center py-20">
-            <p className="text-gray-500 text-xl">No games found matching "{searchTerm}"</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 text-indigo-400 hover:text-indigo-300 underline"
-            >
-              Reset Filters
-            </button>
-          </div>
-        )}
       </div>
 
-      <div className="mt-16 prose prose-invert max-w-none text-gray-400">
-        <h2 className="text-2xl font-bold text-white mb-4">The Best Unblocked Games Site 2025</h2>
-        <p className="mb-4">
-          Welcome to the ultimate destination for unblocked games. We provide a curated selection of high-quality HTML5 and WebGL games that work on school Chromebooks, office networks, and home devices without any downloads or plugins.
-        </p>
-        <p>
-          Our catalog is updated daily with the latest hits including io games, arcade classics, racing simulators, and puzzle challenges. Enjoy a seamless gaming experience with our optimized game player that ensures low latency and high frame rates.
-        </p>
-      </div>
+      <AdBanner slotId="home-bottom" className="mt-24" />
     </div>
   );
 };
 
-const GamePlayer: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const game = GAMES.find(g => g.id === id);
-
-  useEffect(() => {
-    // Scroll to top when entering game player
-    window.scrollTo(0, 0);
-  }, [id]);
-
-  if (!game) {
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h2 className="text-2xl font-bold text-white mb-4">Game Not Found</h2>
-        <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-          <ArrowLeft className="w-5 h-5" /> Return Home
-        </Link>
+const Footer: React.FC = () => (
+  <footer className="bg-gray-950 border-t border-gray-900 py-24 mt-40">
+    <div className="container mx-auto px-4 text-center">
+      <div className="flex flex-wrap justify-center gap-16 mb-16 text-[11px] font-black uppercase tracking-[0.4em] text-gray-600">
+        <Link to="/about" className="hover:text-indigo-400 transition-colors">Origins</Link>
+        <Link to="/privacy" className="hover:text-indigo-400 transition-colors">Ethics</Link>
+        <Link to="/contact" className="hover:text-indigo-400 transition-colors">Connect</Link>
       </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <button 
-        onClick={() => navigate('/')} 
-        className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors group"
-      >
-        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> 
-        Back to Games
-      </button>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-800 aspect-video relative">
-             <iframe 
-              src={game.url} 
-              className="w-full h-full border-0"
-              allowFullScreen
-              allow="autoplay; gamepad; microphone; camera; gyroscope; accelerometer"
-              title={game.title}
-            />
-          </div>
-
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">{game.title}</h1>
-              <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-                <span className="bg-gray-800 px-2 py-1 rounded border border-gray-700">{game.category}</span>
-                <span>•</span>
-                <span>1,245,392 Plays</span>
-              </div>
-              <p className="text-gray-300 leading-relaxed">{game.description}</p>
-            </div>
-            <div className="flex gap-2">
-              <button className="p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors" title="Report Bug">
-                <Shield className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <AdBanner />
-          
-          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-              <Flame className="w-5 h-5 text-orange-500" />
-              Recommended
-            </h3>
-            <div className="space-y-4">
-              {GAMES.filter(g => g.id !== id).slice(0, 4).map(g => (
-                <Link key={g.id} to={`/game/${g.id}`} className="flex gap-3 group">
-                  <img src={g.image} alt={g.title} className="w-20 h-14 object-cover rounded bg-gray-800" />
-                  <div>
-                    <h4 className="text-white text-sm font-medium group-hover:text-indigo-400 transition-colors line-clamp-1">{g.title}</h4>
-                    <p className="text-xs text-gray-500">{g.category}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="max-w-xl mx-auto mb-16">
+         <p className="text-[10px] text-gray-800 uppercase tracking-widest leading-loose font-black italic border-y border-gray-900 py-10">
+           NODOWNLOAD2025.ONLINE - THE DEFINITIVE UNBLOCKED STANDARD. ALL TRADEMARKS BELONG TO THEIR RESPECTIVE VISIONARIES. ZERO LATENCY. HIGH FIDELITY. GLOBAL ACCESS.
+         </p>
       </div>
+      <p className="text-gray-900 text-[11px] uppercase font-black tracking-[1em] select-none opacity-20">© 2025 UNBLOCKED GAMES ONLINE. NO DOWNLOAD REQUIRED.</p>
     </div>
-  );
-};
-
-const StaticPage: React.FC<{ type: 'about' | 'privacy' }> = ({ type }) => (
-  <div className="container mx-auto px-4 py-12 max-w-3xl">
-    <div className="bg-gray-900 rounded-2xl p-8 md:p-12 border border-gray-800">
-      <h1 className="text-3xl font-bold text-white mb-8 capitalize">{type === 'about' ? 'About Us' : 'Privacy Policy'}</h1>
-      <div className="prose prose-invert prose-indigo max-w-none">
-        {type === 'about' ? (
-          <>
-            <p>Welcome to <strong>Unblocked Games 2025</strong>, the premier destination for seamless browser gaming. Our mission is simple: provide instant access to high-quality games without the hassle of downloads, logins, or paywalls.</p>
-            <p>Founded by a team of gaming enthusiasts and web engineers, we've built a platform that optimizes performance for all devices, from high-end gaming rigs to school Chromebooks.</p>
-            <h3>Why Choose Us?</h3>
-            <ul>
-              <li><strong>Zero Installs:</strong> Play directly in your browser.</li>
-              <li><strong>School Friendly:</strong> Optimized to work on restricted networks.</li>
-              <li><strong>Safe & Secure:</strong> All games are vetted for safety and quality.</li>
-            </ul>
-          </>
-        ) : (
-          <>
-            <p>Last updated: January 2025</p>
-            <p>We respect your privacy and are committed to protecting it through our compliance with this policy.</p>
-            <h3>Information We Collect</h3>
-            <p>We do not collect personal information (like names or emails) unless you voluntarily provide it. We may automatically collect non-personal information such as browser type, operating system, and IP address for analytics purposes.</p>
-            <h3>Cookies and Tracking</h3>
-            <p>We use cookies to improve your experience and analyze site traffic. Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to your website or other websites.</p>
-            <h3>Third-Party Links</h3>
-            <p>Our site contains links to other websites (game providers). We are not responsible for the privacy practices of these other sites.</p>
-          </>
-        )}
-      </div>
-    </div>
-  </div>
+  </footer>
 );
-
-// --- APP ---
 
 const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-[#111827] text-white">
+    <div className="min-h-screen flex flex-col bg-gray-950 text-white font-sans selection:bg-indigo-600/50 antialiased">
       <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home searchTerm={searchTerm} />} />
           <Route path="/game/:id" element={<GamePlayer />} />
-          <Route path="/about" element={<StaticPage type="about" />} />
-          <Route path="/privacy" element={<StaticPage type="privacy" />} />
-          <Route path="*" element={
-            <div className="flex flex-col items-center justify-center h-96">
-              <h1 className="text-4xl font-bold text-gray-700 mb-4">404</h1>
-              <p className="text-gray-500">Page not found</p>
-              <Link to="/" className="mt-4 text-indigo-400 hover:underline">Go Home</Link>
-            </div>
-          } />
+          <Route path="/about" element={<div className="container mx-auto px-4 py-40 text-center text-gray-800 font-black uppercase tracking-[1em] opacity-20">The Vision Behind nodownload2025.online</div>} />
+          <Route path="/privacy" element={<div className="container mx-auto px-4 py-40 text-center text-gray-800 font-black uppercase tracking-[1em] opacity-20">Data Security Standards 2025</div>} />
+          <Route path="/contact" element={<div className="container mx-auto px-4 py-40 text-center text-gray-800 font-black uppercase tracking-[1em] opacity-20">Direct Support Infrastructure</div>} />
         </Routes>
       </main>
-
       <Footer />
+      <CookieConsent />
+    </div>
+  );
+};
+
+const CookieConsent: React.FC = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem('cookies-accepted')) setShow(true);
+  }, []);
+  const accept = () => {
+    localStorage.setItem('cookies-accepted', 'true');
+    setShow(false);
+  };
+  if (!show) return null;
+  return (
+    <div className="fixed bottom-0 left-0 w-full bg-indigo-950/95 backdrop-blur-3xl p-10 flex flex-col md:flex-row items-center justify-between z-[100] border-t border-indigo-500/20 gap-10 shadow-3xl">
+      <div className="flex items-center gap-8 text-center md:text-left">
+        <Cookie className="w-12 h-12 text-indigo-400 shrink-0 hidden md:block" />
+        <p className="text-xs text-indigo-100 font-black uppercase tracking-widest leading-loose max-w-2xl">
+          WE UTILIZE PERFORMANCE-FOCUSED COOKIES TO MAINTAIN OUR ZERO-LAG CLOUD INFRASTRUCTURE. BY PLAYING, YOU ACKNOWLEDGE OUR 2025 DATA ARCHITECTURE.
+        </p>
+      </div>
+      <button onClick={accept} className="bg-white text-indigo-950 px-16 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] hover:bg-indigo-100 transition-all shadow-2xl active:scale-95 transform hover:scale-105">
+        Accept & Sync
+      </button>
     </div>
   );
 };
