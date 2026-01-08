@@ -1,7 +1,9 @@
+
 import React, { ErrorInfo, ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import App from './App';
+// Fix: Import App from the src directory where the full implementation and default export reside.
+import App from './src/App';
 
 interface ErrorBoundaryProps {
   children?: ReactNode;
